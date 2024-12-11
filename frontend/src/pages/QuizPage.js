@@ -1,42 +1,38 @@
 import React, { useEffect, useState } from 'react';
-import { fetchQuestions } from '../services/api';
-import Question from '../components/Question';
+import axios from 'axios';
 
-const QuizPage = () => {
-  const [questions, setQuestions] = useState([]);
-  const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
-  const [answers, setAnswers] = useState([]);
+function QuizPage() {
+  const [quizData, setQuizData] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
   useEffect(() => {
-    const loadQuestions = async () => {
-      const data = await fetchQuestions();
-      setQuestions(data);
-    };
-    loadQuestions();
+    // Make an API call to the backend to fetch quiz data
+    axios
+      .get('/api/quiz')  // Proxy will redirect this to http://localhost:3000/api/quiz
+      .then((response) => {
+        setQuizData(response.data);  // Store the quiz data
+        setLoading(false);  // Set loading to false once data is fetched
+      })
+      .catch((err) => {
+        setError('Failed to fetch quiz data');
+        setLoading(false);
+      });
   }, []);
 
-  const handleAnswer = (answer) => {
-    setAnswers([...answers, { questionId: questions[currentQuestionIndex]._id, answer }]);
-    if (currentQuestionIndex < questions.length - 1) {
-      setCurrentQuestionIndex(currentQuestionIndex + 1);
-    } else {
-      // Navigate to results or finalize quiz
-      console.log('Quiz Complete', answers);
-    }
-  };
-
-  if (questions.length === 0) {
-    return <div>Loading questions...</div>;
-  }
+  if (loading) return <p>Loading quiz data...</p>;
+  if (error) return <p>{error}</p>;
 
   return (
-    <div className="container">
-      <Question 
-        question={questions[currentQuestionIndex]} 
-        onAnswer={handleAnswer} 
-      />
+    <div>
+      <h2>Quiz Page</h2>
+      <ul>
+        {quizData.map((quiz, index) => (
+          <li key={index}>{quiz.name}</li>
+        ))}
+      </ul>
     </div>
   );
-};
+}
 
 export default QuizPage;
